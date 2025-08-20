@@ -1,17 +1,22 @@
-from scapy.all import sniff
-from scapy.layers.inet import IP, TCP, UDP
+from scapy.all import sniff, IP, TCP, UDP, ICMP
 
 def packet_callback(packet):
-    if IP in packet:
-        ip_src = packet[IP].src
-        ip_dst = packet[IP].dst
-        proto = packet[IP].proto
-        print(f"IP: {ip_src} -> {ip_dst} | Protocol: {proto}")
-        if TCP in packet:
-            print(f"TCP Ports: {packet[TCP].sport} -> {packet[TCP].dport}")
-        elif UDP in packet:
-            print(f"UDP Ports: {packet[UDP].sport} -> {packet[UDP].dport}")
-        print(f"Payload: {bytes(packet.payload)[:50]}...\n")
+    if IP in packet:  # Check if the packet has an IP layer
+        src_ip = packet[IP].src
+        dst_ip = packet[IP].dst
 
-print("Starting packet capture... Press Ctrl+C to stop.")
-sniff(prn=packet_callback, count=20)  # captures 20 packets
+        if TCP in packet:
+            proto = "TCP"
+        elif UDP in packet:
+            proto = "UDP"
+        elif ICMP in packet:
+            proto = "ICMP"
+        else:
+            proto = "Other"
+
+        payload = bytes(packet[IP].payload)[:50]  # show first 50 bytes only
+        print(f"[{proto}] {src_ip} --> {dst_ip} | Payload: {payload}")
+
+if __name__ == "__main__":
+    print("Starting basic network sniffer... Press CTRL+C to stop.\n")
+    sniff(prn=packet_callback, store=False)
